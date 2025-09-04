@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "water_reminder_app",
+    "name": "water tracker and reminder",
     "slug": "water_reminder_app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -17,7 +17,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.water_reminder_app"
+      "package": "com.anonymous.water_reminder"
     },
     "web": {
       "bundler": "metro",
@@ -38,6 +38,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "cd2ee8ca-62ab-480e-ab30-5319be34386a"
+      }
     }
   }
 }
