@@ -1,7 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { configureReanimatedLogger } from 'react-native-reanimated';
+
+configureReanimatedLogger({
+  strict: false,
+});
+
 
 // ✅ global notification handler
 Notifications.setNotificationHandler({
@@ -85,7 +91,7 @@ export default function TimerScreen() {
         },
       });
 
-      console.log(`Scheduled notification ${notificationId} for ${timer.name} at ${timer.hour}:${timer.minute}`);
+      //console.log(`Scheduled notification ${notificationId} for ${timer.name} at ${timer.hour}:${timer.minute}`);
       return notificationId;
     } catch (error) {
       console.error("Error scheduling notification:", error);
@@ -97,7 +103,7 @@ export default function TimerScreen() {
   const cancelNotification = async (notificationId: string) => {
     try {
       await Notifications.cancelScheduledNotificationAsync(notificationId);
-      console.log(`Cancelled notification ${notificationId}`);
+      //console.log(`Cancelled notification ${notificationId}`);
     } catch (error) {
       console.error("Error cancelling notification:", error);
     }
@@ -109,10 +115,15 @@ export default function TimerScreen() {
       try {
         const savedTimers = await AsyncStorage.getItem("notification_timers");
         if (savedTimers !== null) {
-          const parsedTimers = JSON.parse(savedTimers);
-          setTimers(parsedTimers);
+          const parsedTimers: NotificationTimer[] = JSON.parse(savedTimers);
 
-          // Re-schedule active timers (in case the app was closed and notifications were cleared)
+          // cancel everything first (to avoid duplicates)
+          const pending = await Notifications.getAllScheduledNotificationsAsync();
+          for (const n of pending) {
+            await Notifications.cancelScheduledNotificationAsync(n.identifier);
+          }
+
+          // reschedule fresh
           for (const timer of parsedTimers) {
             if (timer.isActive) {
               const newNotificationId = await scheduleNotification(timer);
@@ -121,6 +132,9 @@ export default function TimerScreen() {
               }
             }
           }
+
+          setTimers(parsedTimers);
+          await AsyncStorage.setItem("notification_timers", JSON.stringify(parsedTimers));
         }
       } catch (error) {
         console.error("Error loading timers:", error);
@@ -128,6 +142,7 @@ export default function TimerScreen() {
     };
     loadTimers();
   }, []);
+
 
   // Save timers whenever they change
   useEffect(() => {
